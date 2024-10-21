@@ -1,45 +1,39 @@
 name: CI Pipeline
-
-# Trigger the workflow on any pull request to main
 on:
   pull_request:
     branches:
       - main
-### this is my code###
+      - feature/*
+      - bugfix/*
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
-
     steps:
-    # Step 1: Checkout the repository code
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    # Step 2: Set up Node.js environment
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'  # You can adjust the Node.js version if needed
-
-    # Step 3: Install dependencies (npm install)
-    - name: Install dependencies
-      run: npm install
-
-    # Step 4: Linting code (ESLint)
-    - name: Run ESLint
-      run: npm run lint
-
-    # Step 5: Formatting code (Prettier)
-    - name: Run Prettier
-      run: npm run prettier
-
-    # Step 6: Running tests (Jest)
-    - name: Run Tests
-      env:
-        CI: true  # Ensures Jest runs in CI mode
-      run: npm run test
-
-    # Step 7: Build the project
-    - name: Build the project
-      run: npm run build
-
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '15'
+      - name: Install dependencies
+        run: npm install
+        working-directory: codebase/rdicidr-0.1.0
+      - name: Install Prettier globally
+        run: npm install -g prettier
+      - name: Lint code with ESLint
+        run: npm run lint
+        working-directory: codebase/rdicidr-0.1.0
+      - name: Format code with Prettier
+        run: |
+          npx prettier --write "./src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Apply automatic formatting changes"
+        working-directory: codebase/rdicidr-0.1.0
+      - name: Run tests with Jest
+        run: CI=true npm run test
+        working-directory: codebase/rdicidr-0.1.0
+      - name: Build the project
+        run: npm run build
+        working-directory: codebase/rdicidr-0.1.0
